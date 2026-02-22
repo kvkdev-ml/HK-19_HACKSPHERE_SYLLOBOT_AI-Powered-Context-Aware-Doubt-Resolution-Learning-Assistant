@@ -9,35 +9,26 @@ import os
 from werkzeug.utils import secure_filename
 import easyocr
 import cv2
-
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
-
 collection_name='kvkrag'
 chroma_db_path=r'C:\Users\kumar\Desktop\KVKDEV\Hacknovation2.0\db'
 UPLOAD_FOLDER=r'C:\Users\kumar\Desktop\KVKDEV\Hacknovation2.0\static\files'
-
 documents=[]
 ids=[]
 metadatas=[]
 counter=0
 uploaded_files=[]
-
 reader = easyocr.Reader(['en'], gpu=False)
-
 conn=sql.connect(host='localhost',user='root',password='',database='syllobot')
 curs=conn.cursor()
-
 chroma_client=chromadb.PersistentClient(path=chroma_db_path)
 embedding_function=DefaultEmbeddingFunction()
-
 try:
     chroma_client.delete_collection(name=collection_name)
 except:
     pass
-
 collection=chroma_client.create_collection(name=collection_name,embedding_function=embedding_function)
-
 def chunking(page_text,max_words=500):
     sents=sent_tokenize(page_text)
     chunks=[]
@@ -57,8 +48,6 @@ def chunking(page_text,max_words=500):
     if current_chunk:
         chunks.append(" ".join(current_chunk))
     return chunks
-
-# ---------------- PDF RAG MODEL ----------------
 def generate(question):
     results=collection.query(query_texts=[question],n_results=3)
     if not results["documents"] or not results["documents"][0]:
@@ -78,16 +67,12 @@ Answer:"""
         options={"num_predict":200}
     )
     return response['message']['content']
-
-# ---------------- IMAGE DIRECT MODEL ----------------
 def generate_image_model(question):
     prompt=f"""You are an AI that solves questions extracted from images.
 Answer clearly and directly.
 If unclear, say you cannot understand properly.
-
 Question:
 {question}
-
 Answer:"""
     response=ollama.chat(
         model='qwen2.5:0.5b',
@@ -96,19 +81,15 @@ Answer:"""
         options={"num_predict":300}
     )
     return response['message']['content']
-
 @app.route('/')
 def index():
     return render_template('index.html')
-
 @app.route('/login_page')
 def login_page():
     return render_template('login.html')
-
 @app.route('/signup')
 def signup_page():
     return render_template('signup.html')
-
 @app.route('/login',methods=['POST'])
 def new_user():
     fname=request.form.get('fname')
@@ -119,7 +100,6 @@ def new_user():
     curs.execute(query,[fname,username,userpass,email])
     conn.commit()
     return render_template('login.html')
-
 @app.route('/SyllobotAI_Home',methods=['POST'])
 def authentication():
     username=request.form.get('username')
@@ -131,7 +111,6 @@ def authentication():
         session['user']={'fname':dt[0],'username':dt[1]}
         return redirect(url_for('home'))
     return render_template('login.html')
-
 @app.route('/history')
 def history_page():
     if 'user' not in session:
@@ -141,22 +120,38 @@ def history_page():
     query = "SELECT * FROM user_dt WHERE user=%s ORDER BY idx DESC;"
     curs.execute(query, (username,))
     rows = curs.fetchall()
-    history_data=[]
+    timeline_items = []
+    total_questions = 0
+    total_uploads = 0
     for row in rows:
-        history_data.append({
-            "idx": row[0],
-            "user": row[1],
-            "question": row[2],
-            "answer": row[3],
-            "file_name": row[4],
-            "file_type": row[5]
-        })
-    return render_template("history.html",history=history_data,data=user)
+        idx, user, question, answer, file_name, file_type = row
+        if question and answer:
+            timeline_items.append({
+                "type": "question",
+                "question": question,
+                "answer": answer,
+                "time": idx,
+            })
+            total_questions += 1
+        if file_name:
+            timeline_items.append({
+                "type": "upload",
+                "name": file_name,
+                "filetype": file_type,
+                "time": idx
+            })
+            total_uploads += 1
+    return render_template(
+        "history.html",
+        timeline_items=timeline_items,
+        total_questions=total_questions,
+        total_uploads=total_uploads,
+        data=user
+    )
 @app.route('/Home_Syllobot')
 def home():
     user=session.get('user',{'fname':'user','username':'guest'})
     return render_template('dashboard.html',data=user,uploaded_files=uploaded_files)
-
 @app.route('/upload', methods=['POST'])
 def read_file():
     global counter
