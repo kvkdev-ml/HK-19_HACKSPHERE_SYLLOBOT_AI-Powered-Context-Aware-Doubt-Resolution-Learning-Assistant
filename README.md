@@ -216,7 +216,7 @@ Syllobot is an AI-powered student assistant that allows users to:
     Personalized AI tutor
 
 👨‍💻 Author
-K Vishal Kumar
-Divya Ranjan Swain
+K Vishal Kumar, 
+Divya Ranjan Swain, 
 Prachi Priyadarshini
 Built for hackathon & intelligent doubt solving systems
