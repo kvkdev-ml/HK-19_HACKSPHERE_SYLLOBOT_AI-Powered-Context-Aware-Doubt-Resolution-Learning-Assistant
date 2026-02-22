@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Login - Syllobot{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="text-center mb-3">
+            <div class="logo-icon" style="margin: 0 auto;">S</div>
+            <h1 class="mt-2">Syllobot</h1>
+            <p class="text-muted text-sm">Syllabus-Aware AI Assistant</p>
+        </div>
+        {% if error %}
+        <div style="background: #fee2e2; color: #dc2626; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+            {{ error }}
+        </div>
+        {% endif %}
+        <form method="POST" action="/SyllobotAI_Home">
+            <div class="mb-2">
+                <label class="text-sm" style="display: block; margin-bottom: 0.25rem;">Username</label>
+                <input type="username" name="username" required placeholder="Your username">
+            </div>
+            <div class="mb-2">
+                <label class="text-sm" style="display: block; margin-bottom: 0.25rem;">Password</label>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+               Log in
+            </button>
+        </form>
+        <div class="text-center mt-3">
+            <p class="text-sm text-muted">
+                Don't have an account? 
+                <a href="{{ url_for('signup_page') }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign Up</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
